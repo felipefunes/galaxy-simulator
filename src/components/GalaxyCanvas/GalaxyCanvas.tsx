@@ -1,13 +1,15 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import {
   DEFAULT_SPIRAL_GALAXY_PARAMS,
   angularOffsetFromNearestArm,
   generateSpiralGalaxyParticles,
+  rotationV0FromDarkMatterFraction,
   type Particle,
 } from '../../physics'
+import { useSimulationStore } from '../../store/simulationStore'
 import { createStarSpriteTexture } from './starSprite'
 
 // Ω(r) from the physics module is expressed in abstract simulation units — real
@@ -20,6 +22,11 @@ const TIME_SCALE = 0.004
 // arms instead of the whole disk spinning in lockstep.
 const SPIRAL_PATTERN_SPEED = 35 * TIME_SCALE
 
+const MIN_PARTICLE_COUNT = 500
+// Extinction is dimmed but never fully opaque, even at 100% dust.
+const MIN_OPACITY = 0.35
+const MAX_OPACITY = 0.9
+
 const DISK_COLOR = new THREE.Color('#8f7a63')
 const ARM_COLOR = new THREE.Color('#bcd6ff')
 const STAR_SPRITE = createStarSpriteTexture()
@@ -27,33 +34,50 @@ const STAR_SPRITE = createStarSpriteTexture()
 function GalaxyDisk() {
   const pointsRef = useRef<THREE.Points>(null)
   const geometryRef = useRef<THREE.BufferGeometry>(null)
-  const [particles] = useState<Particle[]>(() =>
-    generateSpiralGalaxyParticles(DEFAULT_SPIRAL_GALAXY_PARAMS),
+  const materialRef = useRef<THREE.PointsMaterial>(null)
+  const particlesRef = useRef<Particle[]>([])
+  const buffersRef = useRef<{ positions: Float32Array; colors: Float32Array } | null>(null)
+
+  const starsPercent = useSimulationStore((s) => s.starsPercent)
+  const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
+  const dustPercent = useSimulationStore((s) => s.dustPercent)
+
+  const particleCount = Math.max(
+    MIN_PARTICLE_COUNT,
+    Math.round((DEFAULT_SPIRAL_GALAXY_PARAMS.particleCount * starsPercent) / 100),
+  )
+  const rotationV0 = rotationV0FromDarkMatterFraction(
+    darkMatterPercent / 100,
+    DEFAULT_SPIRAL_GALAXY_PARAMS.rotationV0,
   )
 
-  // Mutated in place every frame for performance, so it lives in a ref rather
-  // than state — refs are the sanctioned mutable escape hatch under React's
-  // render-purity rules, lazily initialized here on first render.
-  const buffersRef = useRef<{ positions: Float32Array; colors: Float32Array } | null>(null)
-  if (buffersRef.current === null) {
-    buffersRef.current = {
-      positions: new Float32Array(particles.length * 3),
-      colors: new Float32Array(particles.length * 3),
-    }
-  }
-
+  // Regenerates the star field whenever a parameter that changes its *initial*
+  // distribution (how many stars, how fast they orbit) changes. Re-running the
+  // generator reshuffles individual stars, which is expected — the slider
+  // controls the population's statistics, not any one star's identity.
   useEffect(() => {
     const geometry = geometryRef.current
-    const buffers = buffersRef.current
-    if (!geometry || !buffers) return
-    geometry.setAttribute('position', new THREE.BufferAttribute(buffers.positions, 3))
-    geometry.setAttribute('color', new THREE.BufferAttribute(buffers.colors, 3))
-  }, [])
+    if (!geometry) return
+
+    particlesRef.current = generateSpiralGalaxyParticles({
+      ...DEFAULT_SPIRAL_GALAXY_PARAMS,
+      particleCount,
+      rotationV0,
+    })
+
+    const positions = new Float32Array(particlesRef.current.length * 3)
+    const colors = new Float32Array(particlesRef.current.length * 3)
+    buffersRef.current = { positions, colors }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  }, [particleCount, rotationV0])
 
   useFrame((state) => {
     const geometry = pointsRef.current?.geometry
     const buffers = buffersRef.current
-    if (!geometry || !buffers) return
+    const particles = particlesRef.current
+    if (!geometry || !buffers || particles.length === 0) return
 
     const t = state.clock.elapsedTime
     const scratchColor = new THREE.Color()
@@ -85,18 +109,23 @@ function GalaxyDisk() {
     positionAttribute.needsUpdate = true
     const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute
     colorAttribute.needsUpdate = true
+
+    if (materialRef.current) {
+      materialRef.current.opacity = MAX_OPACITY - (dustPercent / 100) * (MAX_OPACITY - MIN_OPACITY)
+    }
   })
 
   return (
     <points ref={pointsRef}>
       <bufferGeometry ref={geometryRef} />
       <pointsMaterial
+        ref={materialRef}
         size={0.12}
         map={STAR_SPRITE}
         vertexColors
         sizeAttenuation
         transparent
-        opacity={0.9}
+        opacity={MAX_OPACITY}
         depthWrite={false}
       />
     </points>
