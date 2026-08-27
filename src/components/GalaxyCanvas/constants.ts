@@ -4,3 +4,10 @@
 export const TIME_SCALE = 0.004
 
 export const MIN_PARTICLE_COUNT = 500
+
+// Per-star brightness multiplier range applied on top of each star's fixed
+// spectral color. MAX exceeds 1 deliberately — combined with additive
+// blending, the brightest stars (near an arm, near the core) genuinely glow
+// instead of just reaching flat full color.
+export const MIN_BRIGHTNESS = 0.55
+export const MAX_BRIGHTNESS = 1.4

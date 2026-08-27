@@ -15,6 +15,7 @@ const baseParams: BarredSpiralGalaxyParams = {
   barWidth: 0.7,
   barPopulationFraction: 0.25,
   barPatternSpeed: 55,
+  starTemperatureBias: 50,
 }
 
 describe('generateBarredSpiralGalaxyParticles', () => {
@@ -32,6 +33,10 @@ describe('generateBarredSpiralGalaxyParticles', () => {
       expect(Number.isFinite(p.height)).toBe(true)
       expect(Number.isFinite(p.angularVelocity)).toBe(true)
       expect(p.angularVelocity).toBeGreaterThan(0)
+      for (const channel of [p.color.r, p.color.g, p.color.b]) {
+        expect(channel).toBeGreaterThanOrEqual(0)
+        expect(channel).toBeLessThanOrEqual(1)
+      }
     }
   })
 

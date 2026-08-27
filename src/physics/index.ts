@@ -25,6 +25,8 @@ export { generateEllipticalGalaxyParticles } from './ellipticalGenerator'
 export type { EllipticalGalaxyParams } from './ellipticalGenerator'
 export { generateBarredSpiralGalaxyParticles } from './barredGenerator'
 export type { BarredSpiralGalaxyParams } from './barredGenerator'
+export { sampleStarColor, offsetTemperatureBias } from './stellarClassification'
+export type { StarColor } from './stellarClassification'
 export {
   DEFAULT_SPIRAL_GALAXY_PARAMS,
   DEFAULT_ELLIPTICAL_GALAXY_PARAMS,

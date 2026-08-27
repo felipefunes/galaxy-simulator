@@ -1,6 +1,10 @@
 import { angularVelocity } from './rotationCurve'
 import { sampleExponentialDiskRadius, sampleVerticalOffset } from './diskProfile'
 import { logSpiralArmAngle, sampleArmScatter } from './spiralArms'
+import { offsetTemperatureBias, sampleStarColor, type StarColor } from './stellarClassification'
+
+/** Arm stars sample hotter than the disk baseline — recent star formation. */
+const ARM_TEMPERATURE_BOOST = 40
 
 export interface SpiralGalaxyParams {
   particleCount: number
@@ -19,19 +23,24 @@ export interface SpiralGalaxyParams {
    * turn the disk into a thin ribbon instead of a galaxy.
    */
   armPopulationFraction: number
+  /** 0-100 spectral temperature baseline for the disk population; see stellarClassification.ts. */
+  starTemperatureBias: number
 }
 
 /**
  * A star's state in cylindrical coordinates (r, θ, z), plus the angular velocity
  * Ω(r) it orbits at. θ0 is the angle at t = 0; a renderer animates it forward with
  * θ(t) = θ0 + angularVelocity * t — each star genuinely differentially rotates at
- * its own rate instead of the whole disk spinning as a rigid body.
+ * its own rate instead of the whole disk spinning as a rigid body. color is fixed
+ * at generation time (a star's spectral type doesn't change); the renderer is
+ * free to modulate brightness dynamically without changing hue.
  */
 export interface Particle {
   radius: number
   angle0: number
   height: number
   angularVelocity: number
+  color: StarColor
 }
 
 /**
@@ -53,19 +62,24 @@ export function generateSpiralGalaxyParticles(
 
   for (let i = 0; i < params.particleCount; i++) {
     const radius = sampleExponentialDiskRadius(params.diskScaleRadius, random)
+    const isArmStar = random() < params.armPopulationFraction
 
-    const angle0 =
-      random() < params.armPopulationFraction
-        ? logSpiralArmAngle(radius, params.diskScaleRadius, params.pitchAngle) +
-          Math.floor(random() * params.armCount) * armSpacing +
-          sampleArmScatter(params.armWidth, random)
-        : random() * Math.PI * 2
+    const angle0 = isArmStar
+      ? logSpiralArmAngle(radius, params.diskScaleRadius, params.pitchAngle) +
+        Math.floor(random() * params.armCount) * armSpacing +
+        sampleArmScatter(params.armWidth, random)
+      : random() * Math.PI * 2
+
+    const temperatureBias = isArmStar
+      ? offsetTemperatureBias(params.starTemperatureBias, ARM_TEMPERATURE_BOOST)
+      : params.starTemperatureBias
 
     particles.push({
       radius,
       angle0,
       height: sampleVerticalOffset(params.diskScaleHeight, random),
       angularVelocity: angularVelocity(radius, params.rotationV0, params.rotationCoreRadius),
+      color: sampleStarColor(temperatureBias, random),
     })
   }
 

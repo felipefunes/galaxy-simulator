@@ -11,15 +11,13 @@ import {
 import { useSimulationStore } from '../../store/simulationStore'
 import { attachStarFieldBuffers, dustOpacity } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
-import { MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
+import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
 
 // The spiral pattern rotates rigidly at a single speed (Lin & Shu 1964 density
 // wave theory), close to Ω(r) at mid-disk — stars visibly stream in and out of the
 // arms instead of the whole disk spinning in lockstep.
 const SPIRAL_PATTERN_SPEED = 35 * TIME_SCALE
 
-const DISK_COLOR = new THREE.Color('#8f7a63')
-const ARM_COLOR = new THREE.Color('#bcd6ff')
 const STAR_SPRITE = createStarSpriteTexture()
 
 export function SpiralGalaxyDisk() {
@@ -32,6 +30,7 @@ export function SpiralGalaxyDisk() {
   const starsPercent = useSimulationStore((s) => s.starsPercent)
   const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
   const dustPercent = useSimulationStore((s) => s.dustPercent)
+  const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
 
   const particleCount = Math.max(
     MIN_PARTICLE_COUNT,
@@ -50,9 +49,10 @@ export function SpiralGalaxyDisk() {
       ...DEFAULT_SPIRAL_GALAXY_PARAMS,
       particleCount,
       rotationV0,
+      starTemperatureBias,
     })
     buffersRef.current = attachStarFieldBuffers(geometry, particlesRef.current)
-  }, [particleCount, rotationV0])
+  }, [particleCount, rotationV0, starTemperatureBias])
 
   useFrame((state) => {
     const geometry = pointsRef.current?.geometry
@@ -61,7 +61,6 @@ export function SpiralGalaxyDisk() {
     if (!geometry || !buffers || particles.length === 0) return
 
     const t = state.clock.elapsedTime
-    const scratchColor = new THREE.Color()
 
     for (let i = 0; i < particles.length; i++) {
       const particle = particles[i]
@@ -79,11 +78,11 @@ export function SpiralGalaxyDisk() {
         DEFAULT_SPIRAL_GALAXY_PARAMS.armCount,
       )
       const armProximity = Math.exp(-((armOffset / DEFAULT_SPIRAL_GALAXY_PARAMS.armWidth) ** 2))
-      scratchColor.copy(DISK_COLOR).lerp(ARM_COLOR, armProximity)
+      const brightness = MIN_BRIGHTNESS + (MAX_BRIGHTNESS - MIN_BRIGHTNESS) * armProximity
 
-      buffers.colors[i * 3] = scratchColor.r
-      buffers.colors[i * 3 + 1] = scratchColor.g
-      buffers.colors[i * 3 + 2] = scratchColor.b
+      buffers.colors[i * 3] = particle.color.r * brightness
+      buffers.colors[i * 3 + 1] = particle.color.g * brightness
+      buffers.colors[i * 3 + 2] = particle.color.b * brightness
     }
 
     const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute
@@ -107,6 +106,7 @@ export function SpiralGalaxyDisk() {
         sizeAttenuation
         transparent
         opacity={0.9}
+        blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
     </points>
