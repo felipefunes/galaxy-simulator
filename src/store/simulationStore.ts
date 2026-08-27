@@ -4,7 +4,11 @@ export type GalaxyShape = 'spiral' | 'barred-spiral' | 'elliptical'
 
 interface SimulationState {
   shape: GalaxyShape
-  /** % of stars concentrated in dust lanes / extinguishing background light. */
+  /**
+   * % dust — controls how much material populates the dust lanes tracing the
+   * spiral arms (see physics/dustLane). No effect on ellipticals, which are
+   * gas/dust-poor in reality.
+   */
   dustPercent: number
   /** % of the particle budget actually rendered as stars — controls disk density. */
   starsPercent: number

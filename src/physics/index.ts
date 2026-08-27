@@ -12,6 +12,7 @@ export {
   logSpiralArmAngle,
   angularOffsetFromNearestArm,
   sampleArmScatter,
+  DUST_LANE_ANGULAR_OFFSET,
 } from './spiralArms'
 export { generateSpiralGalaxyParticles } from './galaxyGenerator'
 export type { SpiralGalaxyParams, Particle } from './galaxyGenerator'

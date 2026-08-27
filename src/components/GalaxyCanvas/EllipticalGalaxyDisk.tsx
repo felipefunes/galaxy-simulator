@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { DEFAULT_ELLIPTICAL_GALAXY_PARAMS, generateEllipticalGalaxyParticles, type Particle } from '../../physics'
 import { useSimulationStore } from '../../store/simulationStore'
-import { attachStarFieldBuffers, dustOpacity } from './starFieldBuffers'
+import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
 import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
 
@@ -12,12 +12,10 @@ const STAR_SPRITE = createStarSpriteTexture()
 export function EllipticalGalaxyDisk() {
   const pointsRef = useRef<THREE.Points>(null)
   const geometryRef = useRef<THREE.BufferGeometry>(null)
-  const materialRef = useRef<THREE.PointsMaterial>(null)
   const particlesRef = useRef<Particle[]>([])
   const buffersRef = useRef<{ positions: Float32Array; colors: Float32Array } | null>(null)
 
   const starsPercent = useSimulationStore((s) => s.starsPercent)
-  const dustPercent = useSimulationStore((s) => s.dustPercent)
   const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
 
   const particleCount = Math.max(
@@ -67,17 +65,12 @@ export function EllipticalGalaxyDisk() {
     positionAttribute.needsUpdate = true
     const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute
     colorAttribute.needsUpdate = true
-
-    if (materialRef.current) {
-      materialRef.current.opacity = dustOpacity(dustPercent)
-    }
   })
 
   return (
     <points ref={pointsRef}>
       <bufferGeometry ref={geometryRef} />
       <pointsMaterial
-        ref={materialRef}
         size={0.12}
         map={STAR_SPRITE}
         vertexColors
