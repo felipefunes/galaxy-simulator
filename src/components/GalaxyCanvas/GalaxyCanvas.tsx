@@ -8,6 +8,7 @@ import {
   generateSpiralGalaxyParticles,
   type Particle,
 } from '../../physics'
+import { createStarSpriteTexture } from './starSprite'
 
 // Ω(r) from the physics module is expressed in abstract simulation units — real
 // galactic rotation periods span ~10^8 years, so this compresses that down to a
@@ -21,6 +22,7 @@ const SPIRAL_PATTERN_SPEED = 35 * TIME_SCALE
 
 const DISK_COLOR = new THREE.Color('#8f7a63')
 const ARM_COLOR = new THREE.Color('#bcd6ff')
+const STAR_SPRITE = createStarSpriteTexture()
 
 function GalaxyDisk() {
   const pointsRef = useRef<THREE.Points>(null)
@@ -88,7 +90,15 @@ function GalaxyDisk() {
   return (
     <points ref={pointsRef}>
       <bufferGeometry ref={geometryRef} />
-      <pointsMaterial size={0.12} vertexColors sizeAttenuation transparent opacity={0.9} />
+      <pointsMaterial
+        size={0.12}
+        map={STAR_SPRITE}
+        vertexColors
+        sizeAttenuation
+        transparent
+        opacity={0.9}
+        depthWrite={false}
+      />
     </points>
   )
 }
