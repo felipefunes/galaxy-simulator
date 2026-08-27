@@ -74,12 +74,16 @@ export function Sidebar() {
         </label>
 
         <label className="sidebar__slider">
-          <span>Polvo ({dustPercent}%)</span>
+          <span>
+            Polvo ({dustPercent}%)
+            {shape === 'elliptical' && ' — sin efecto en elípticas'}
+          </span>
           <input
             type="range"
             min={0}
             max={100}
             value={dustPercent}
+            disabled={shape === 'elliptical'}
             onChange={(e) => setDustPercent(Number(e.target.value))}
           />
         </label>
@@ -98,8 +102,9 @@ export function Sidebar() {
 
       <p className="sidebar__note">
         La temperatura estelar sesga el muestreo de tipos espectrales (O-B-A-F-G-K-M,
-        de calientes/azules a frías/rojas) de cada estrella. Los carriles de polvo
-        siguiendo los brazos quedan para un próximo ajuste.
+        de calientes/azules a frías/rojas) de cada estrella. El polvo traza carriles
+        oscuros junto a los brazos (elípticas no tienen, en la vida real son pobres
+        en gas y polvo).
       </p>
     </aside>
   )

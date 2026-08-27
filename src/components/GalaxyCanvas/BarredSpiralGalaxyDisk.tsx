@@ -9,7 +9,8 @@ import {
   type Particle,
 } from '../../physics'
 import { useSimulationStore } from '../../store/simulationStore'
-import { attachStarFieldBuffers, dustOpacity } from './starFieldBuffers'
+import { DustLaneRibbon } from './DustLaneRibbon'
+import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
 import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
 
@@ -17,7 +18,8 @@ import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from '
 // barred galaxies typically show the bar and inner spiral corotating, at least
 // approximately (unlike a plain spiral's arms, which have their own pattern
 // speed independent of the disk's rotation curve).
-const BAR_PATTERN_SPEED = DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barPatternSpeed * TIME_SCALE
+const BAR_PATTERN_SPEED_UNSCALED = DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barPatternSpeed
+const BAR_PATTERN_SPEED = BAR_PATTERN_SPEED_UNSCALED * TIME_SCALE
 const BAR_BRIGHTNESS = MAX_BRIGHTNESS
 
 const STAR_SPRITE = createStarSpriteTexture()
@@ -25,7 +27,6 @@ const STAR_SPRITE = createStarSpriteTexture()
 export function BarredSpiralGalaxyDisk() {
   const pointsRef = useRef<THREE.Points>(null)
   const geometryRef = useRef<THREE.BufferGeometry>(null)
-  const materialRef = useRef<THREE.PointsMaterial>(null)
   const particlesRef = useRef<Particle[]>([])
   const buffersRef = useRef<{ positions: Float32Array; colors: Float32Array } | null>(null)
 
@@ -97,26 +98,35 @@ export function BarredSpiralGalaxyDisk() {
     positionAttribute.needsUpdate = true
     const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute
     colorAttribute.needsUpdate = true
-
-    if (materialRef.current) {
-      materialRef.current.opacity = dustOpacity(dustPercent)
-    }
   })
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry ref={geometryRef} />
-      <pointsMaterial
-        ref={materialRef}
-        size={0.12}
-        map={STAR_SPRITE}
-        vertexColors
-        sizeAttenuation
-        transparent
-        opacity={0.9}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
+    <>
+      <points ref={pointsRef}>
+        <bufferGeometry ref={geometryRef} />
+        <pointsMaterial
+          size={0.12}
+          map={STAR_SPRITE}
+          vertexColors
+          sizeAttenuation
+          transparent
+          opacity={0.9}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+      <DustLaneRibbon
+        armCount={2}
+        pitchAngle={DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.pitchAngle}
+        armReferenceRadius={DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barLength}
+        minRadius={DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barLength}
+        maxRadius={
+          DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barLength +
+          DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 5
+        }
+        patternSpeed={BAR_PATTERN_SPEED_UNSCALED}
+        dustPercent={dustPercent}
       />
-    </points>
+    </>
   )
 }

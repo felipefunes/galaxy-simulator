@@ -35,6 +35,18 @@ export function angularOffsetFromNearestArm(
 }
 
 /**
+ * Dust doesn't sit right on top of the stellar arm's density peak. Gas inside
+ * corotation orbits faster than the spiral pattern itself, so it catches up to
+ * the density wave from behind and shocks there, compressing into a lane offset
+ * from (and just ahead, in the disk's own rotation, of) the young stars that
+ * shock recently triggered — the classic dust-lane-then-blue-clusters offset
+ * seen in grand-design spirals like M51 (Roberts 1969). A small fixed angular
+ * offset opposite the arm's own winding sense stands in for that shock geometry
+ * without simulating gas dynamics.
+ */
+export const DUST_LANE_ANGULAR_OFFSET = -0.18
+
+/**
  * Samples an angular offset clustered around an arm's centerline. Summing two
  * uniform draws (a triangular distribution) concentrates stars near the arm while
  * still allowing some inter-arm scatter, which is a cheap stand-in for the density

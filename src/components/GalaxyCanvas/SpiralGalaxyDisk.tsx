@@ -9,21 +9,22 @@ import {
   type Particle,
 } from '../../physics'
 import { useSimulationStore } from '../../store/simulationStore'
-import { attachStarFieldBuffers, dustOpacity } from './starFieldBuffers'
+import { DustLaneRibbon } from './DustLaneRibbon'
+import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
 import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
 
 // The spiral pattern rotates rigidly at a single speed (Lin & Shu 1964 density
 // wave theory), close to Ω(r) at mid-disk — stars visibly stream in and out of the
 // arms instead of the whole disk spinning in lockstep.
-const SPIRAL_PATTERN_SPEED = 35 * TIME_SCALE
+const SPIRAL_PATTERN_SPEED_UNSCALED = 35
+const SPIRAL_PATTERN_SPEED = SPIRAL_PATTERN_SPEED_UNSCALED * TIME_SCALE
 
 const STAR_SPRITE = createStarSpriteTexture()
 
 export function SpiralGalaxyDisk() {
   const pointsRef = useRef<THREE.Points>(null)
   const geometryRef = useRef<THREE.BufferGeometry>(null)
-  const materialRef = useRef<THREE.PointsMaterial>(null)
   const particlesRef = useRef<Particle[]>([])
   const buffersRef = useRef<{ positions: Float32Array; colors: Float32Array } | null>(null)
 
@@ -89,26 +90,32 @@ export function SpiralGalaxyDisk() {
     positionAttribute.needsUpdate = true
     const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute
     colorAttribute.needsUpdate = true
-
-    if (materialRef.current) {
-      materialRef.current.opacity = dustOpacity(dustPercent)
-    }
   })
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry ref={geometryRef} />
-      <pointsMaterial
-        ref={materialRef}
-        size={0.12}
-        map={STAR_SPRITE}
-        vertexColors
-        sizeAttenuation
-        transparent
-        opacity={0.9}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
+    <>
+      <points ref={pointsRef}>
+        <bufferGeometry ref={geometryRef} />
+        <pointsMaterial
+          size={0.12}
+          map={STAR_SPRITE}
+          vertexColors
+          sizeAttenuation
+          transparent
+          opacity={0.9}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+      <DustLaneRibbon
+        armCount={DEFAULT_SPIRAL_GALAXY_PARAMS.armCount}
+        pitchAngle={DEFAULT_SPIRAL_GALAXY_PARAMS.pitchAngle}
+        armReferenceRadius={DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius}
+        minRadius={DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 0.3}
+        maxRadius={DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 5}
+        patternSpeed={SPIRAL_PATTERN_SPEED_UNSCALED}
+        dustPercent={dustPercent}
       />
-    </points>
+    </>
   )
 }

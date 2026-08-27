@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  DUST_LANE_ANGULAR_OFFSET,
   angularOffsetFromNearestArm,
   logSpiralArmAngle,
   sampleArmScatter,
@@ -44,6 +45,13 @@ describe('angularOffsetFromNearestArm', () => {
       expect(offset).toBeGreaterThanOrEqual(-Math.PI / armCount - 1e-9)
       expect(offset).toBeLessThanOrEqual(Math.PI / armCount + 1e-9)
     }
+  })
+})
+
+describe('DUST_LANE_ANGULAR_OFFSET', () => {
+  it('is a small nonzero offset, not accidentally the arm centerline itself', () => {
+    expect(DUST_LANE_ANGULAR_OFFSET).not.toBe(0)
+    expect(Math.abs(DUST_LANE_ANGULAR_OFFSET)).toBeLessThan(Math.PI / 4)
   })
 })
 
