@@ -67,18 +67,6 @@
   background: rgba(138, 180, 255, 0.12);
 }
 
-.sidebar__shape-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.sidebar__badge {
-  font-size: 0.65rem;
-  color: var(--color-text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
 .sidebar__slider {
   display: flex;
   flex-direction: column;
@@ -91,4 +79,9 @@
 .sidebar__slider input[type='range'] {
   accent-color: var(--color-accent);
   width: 100%;
+}
+
+.sidebar__slider input[type='range']:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
