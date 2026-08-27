@@ -15,3 +15,4 @@ export {
 } from './spiralArms'
 export { generateSpiralGalaxyParticles } from './galaxyGenerator'
 export type { SpiralGalaxyParams, Particle } from './galaxyGenerator'
+export { DEFAULT_SPIRAL_GALAXY_PARAMS } from './defaultGalaxyParams'

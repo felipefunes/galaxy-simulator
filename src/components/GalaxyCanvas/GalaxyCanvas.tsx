@@ -1,52 +1,94 @@
 import { OrbitControls } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
+import {
+  DEFAULT_SPIRAL_GALAXY_PARAMS,
+  angularOffsetFromNearestArm,
+  generateSpiralGalaxyParticles,
+  type Particle,
+} from '../../physics'
 
-const PARTICLE_COUNT = 6000
-const DISK_RADIUS = 12
-const DISK_THICKNESS = 0.4
+// Ω(r) from the physics module is expressed in abstract simulation units — real
+// galactic rotation periods span ~10^8 years, so this compresses that down to a
+// pleasant few-rotations-per-minute animation, like a galactic time-lapse.
+const TIME_SCALE = 0.004
 
-function generatePlaceholderDiskPositions() {
-  const buffer = new Float32Array(PARTICLE_COUNT * 3)
-  for (let i = 0; i < PARTICLE_COUNT; i++) {
-    // Exponential radial falloff: denser toward the center, thinning outward.
-    const r = DISK_RADIUS * Math.sqrt(-Math.log(1 - Math.random()) / 3)
-    const theta = Math.random() * Math.PI * 2
-    const z = (Math.random() - 0.5) * DISK_THICKNESS
+// The spiral pattern rotates rigidly at a single speed (Lin & Shu 1964 density
+// wave theory), close to Ω(r) at mid-disk — stars visibly stream in and out of the
+// arms instead of the whole disk spinning in lockstep.
+const SPIRAL_PATTERN_SPEED = 35 * TIME_SCALE
 
-    buffer[i * 3] = r * Math.cos(theta)
-    buffer[i * 3 + 1] = z
-    buffer[i * 3 + 2] = r * Math.sin(theta)
-  }
-  return buffer
-}
+const DISK_COLOR = new THREE.Color('#8f7a63')
+const ARM_COLOR = new THREE.Color('#bcd6ff')
 
-function PlaceholderDisk() {
+function GalaxyDisk() {
   const pointsRef = useRef<THREE.Points>(null)
-  const [positions] = useState(generatePlaceholderDiskPositions)
+  const geometryRef = useRef<THREE.BufferGeometry>(null)
+  const [particles] = useState<Particle[]>(() =>
+    generateSpiralGalaxyParticles(DEFAULT_SPIRAL_GALAXY_PARAMS),
+  )
 
-  useFrame((_, delta) => {
-    if (pointsRef.current) {
-      pointsRef.current.rotation.y += delta * 0.05
+  // Mutated in place every frame for performance, so it lives in a ref rather
+  // than state — refs are the sanctioned mutable escape hatch under React's
+  // render-purity rules, lazily initialized here on first render.
+  const buffersRef = useRef<{ positions: Float32Array; colors: Float32Array } | null>(null)
+  if (buffersRef.current === null) {
+    buffersRef.current = {
+      positions: new Float32Array(particles.length * 3),
+      colors: new Float32Array(particles.length * 3),
     }
+  }
+
+  useEffect(() => {
+    const geometry = geometryRef.current
+    const buffers = buffersRef.current
+    if (!geometry || !buffers) return
+    geometry.setAttribute('position', new THREE.BufferAttribute(buffers.positions, 3))
+    geometry.setAttribute('color', new THREE.BufferAttribute(buffers.colors, 3))
+  }, [])
+
+  useFrame((state) => {
+    const geometry = pointsRef.current?.geometry
+    const buffers = buffersRef.current
+    if (!geometry || !buffers) return
+
+    const t = state.clock.elapsedTime
+    const scratchColor = new THREE.Color()
+
+    for (let i = 0; i < particles.length; i++) {
+      const particle = particles[i]
+      const angle = particle.angle0 + particle.angularVelocity * TIME_SCALE * t
+
+      buffers.positions[i * 3] = particle.radius * Math.cos(angle)
+      buffers.positions[i * 3 + 1] = particle.height
+      buffers.positions[i * 3 + 2] = particle.radius * Math.sin(angle)
+
+      const armOffset = angularOffsetFromNearestArm(
+        angle - SPIRAL_PATTERN_SPEED * t,
+        particle.radius,
+        DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius,
+        DEFAULT_SPIRAL_GALAXY_PARAMS.pitchAngle,
+        DEFAULT_SPIRAL_GALAXY_PARAMS.armCount,
+      )
+      const armProximity = Math.exp(-((armOffset / DEFAULT_SPIRAL_GALAXY_PARAMS.armWidth) ** 2))
+      scratchColor.copy(DISK_COLOR).lerp(ARM_COLOR, armProximity)
+
+      buffers.colors[i * 3] = scratchColor.r
+      buffers.colors[i * 3 + 1] = scratchColor.g
+      buffers.colors[i * 3 + 2] = scratchColor.b
+    }
+
+    const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute
+    positionAttribute.needsUpdate = true
+    const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute
+    colorAttribute.needsUpdate = true
   })
 
   return (
     <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.12}
-        color="#cdd8ff"
-        sizeAttenuation
-        transparent
-        opacity={0.9}
-      />
+      <bufferGeometry ref={geometryRef} />
+      <pointsMaterial size={0.12} vertexColors sizeAttenuation transparent opacity={0.9} />
     </points>
   )
 }
@@ -56,7 +98,7 @@ export function GalaxyCanvas() {
     <Canvas camera={{ position: [0, 7, 11], fov: 50 }}>
       <color attach="background" args={['#05050a']} />
       <ambientLight intensity={0.3} />
-      <PlaceholderDisk />
+      <GalaxyDisk />
       <OrbitControls enableDamping minDistance={4} maxDistance={40} />
     </Canvas>
   )

@@ -11,6 +11,7 @@ const baseParams: SpiralGalaxyParams = {
   armCount: 2,
   pitchAngle: Math.PI / 8,
   armWidth: 0.5,
+  armPopulationFraction: 0.35,
 }
 
 describe('generateSpiralGalaxyParticles', () => {
