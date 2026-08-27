@@ -1,0 +1,27 @@
+:root {
+  --color-bg: #05050a;
+  --color-panel: #0e0e18;
+  --color-border: #23233a;
+  --color-text: #e8e6f0;
+  --color-text-dim: #8d8ba3;
+  --color-accent: #8ab4ff;
+
+  color-scheme: dark;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
