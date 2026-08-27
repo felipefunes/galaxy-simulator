@@ -12,6 +12,7 @@ const baseParams: SpiralGalaxyParams = {
   pitchAngle: Math.PI / 8,
   armWidth: 0.5,
   armPopulationFraction: 0.35,
+  starTemperatureBias: 50,
 }
 
 describe('generateSpiralGalaxyParticles', () => {
@@ -29,6 +30,10 @@ describe('generateSpiralGalaxyParticles', () => {
       expect(Number.isFinite(p.height)).toBe(true)
       expect(Number.isFinite(p.angularVelocity)).toBe(true)
       expect(p.angularVelocity).toBeGreaterThan(0)
+      for (const channel of [p.color.r, p.color.g, p.color.b]) {
+        expect(channel).toBeGreaterThanOrEqual(0)
+        expect(channel).toBeLessThanOrEqual(1)
+      }
     }
   })
 

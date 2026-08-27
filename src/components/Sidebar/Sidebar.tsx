@@ -13,10 +13,12 @@ export function Sidebar() {
   const dustPercent = useSimulationStore((s) => s.dustPercent)
   const starsPercent = useSimulationStore((s) => s.starsPercent)
   const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
+  const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
   const setShape = useSimulationStore((s) => s.setShape)
   const setDustPercent = useSimulationStore((s) => s.setDustPercent)
   const setStarsPercent = useSimulationStore((s) => s.setStarsPercent)
   const setDarkMatterPercent = useSimulationStore((s) => s.setDarkMatterPercent)
+  const setStarTemperatureBias = useSimulationStore((s) => s.setStarTemperatureBias)
 
   return (
     <aside className="sidebar">
@@ -81,12 +83,23 @@ export function Sidebar() {
             onChange={(e) => setDustPercent(Number(e.target.value))}
           />
         </label>
+
+        <label className="sidebar__slider">
+          <span>Temperatura estelar (frías ↔ calientes)</span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={starTemperatureBias}
+            onChange={(e) => setStarTemperatureBias(Number(e.target.value))}
+          />
+        </label>
       </section>
 
       <p className="sidebar__note">
-        El polvo hoy atenúa el brillo general; los carriles de polvo siguiendo los
-        brazos y la clasificación espectral de estrellas quedan para un próximo
-        ajuste.
+        La temperatura estelar sesga el muestreo de tipos espectrales (O-B-A-F-G-K-M,
+        de calientes/azules a frías/rojas) de cada estrella. Los carriles de polvo
+        siguiendo los brazos quedan para un próximo ajuste.
       </p>
     </aside>
   )

@@ -12,6 +12,7 @@ export const DEFAULT_SPIRAL_GALAXY_PARAMS: SpiralGalaxyParams = {
   pitchAngle: Math.PI / 8,
   armWidth: 0.6,
   armPopulationFraction: 0.35,
+  starTemperatureBias: 50,
 }
 
 export const DEFAULT_ELLIPTICAL_GALAXY_PARAMS: EllipticalGalaxyParams = {
@@ -23,6 +24,7 @@ export const DEFAULT_ELLIPTICAL_GALAXY_PARAMS: EllipticalGalaxyParams = {
   // much slower than a spiral disk's typical Ω(r), consistent with ellipticals'
   // modest, near solid-body rotation.
   rotationSpeed: 14,
+  starTemperatureBias: 50,
 }
 
 export const DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS: BarredSpiralGalaxyParams = {
@@ -38,4 +40,5 @@ export const DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS: BarredSpiralGalaxyParams = {
   barWidth: 0.7,
   barPopulationFraction: 0.25,
   barPatternSpeed: 55, // faster than the plain spiral's ~35 pattern speed
+  starTemperatureBias: 50,
 }

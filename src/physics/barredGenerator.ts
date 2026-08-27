@@ -2,6 +2,9 @@ import type { Particle } from './galaxyGenerator'
 import { angularVelocity } from './rotationCurve'
 import { sampleExponentialDiskRadius, sampleVerticalOffset } from './diskProfile'
 import { logSpiralArmAngle, sampleArmScatter } from './spiralArms'
+import { offsetTemperatureBias, sampleStarColor } from './stellarClassification'
+
+const ARM_TEMPERATURE_BOOST = 40
 
 export interface BarredSpiralGalaxyParams {
   particleCount: number
@@ -17,6 +20,8 @@ export interface BarredSpiralGalaxyParams {
   barPopulationFraction: number
   /** The bar is a rigid rotator — every bar star shares this one angular velocity. */
   barPatternSpeed: number
+  /** 0-100 spectral temperature baseline for the disk population; see stellarClassification.ts. */
+  starTemperatureBias: number
 }
 
 /** Uniform sampling inside an ellipse of semi-axes (length, width) via rejection. */
@@ -58,6 +63,7 @@ export function generateBarredSpiralGalaxyParticles(
         angle0: angle,
         height: sampleVerticalOffset(params.diskScaleHeight * 0.6, random),
         angularVelocity: params.barPatternSpeed,
+        color: sampleStarColor(params.starTemperatureBias, random),
       })
       continue
     }
@@ -66,19 +72,24 @@ export function generateBarredSpiralGalaxyParticles(
     // profile outward by barLength keeps the bar visually distinct instead of
     // being swamped by disk stars sampled at small radii.
     const radius = params.barLength + sampleExponentialDiskRadius(params.diskScaleRadius, random)
+    const isArmStar = random() < params.armPopulationFraction
 
-    const angle0 =
-      random() < params.armPopulationFraction
-        ? logSpiralArmAngle(radius, params.barLength, params.pitchAngle) +
-          Math.floor(random() * 2) * armSpacing +
-          sampleArmScatter(params.armWidth, random)
-        : random() * Math.PI * 2
+    const angle0 = isArmStar
+      ? logSpiralArmAngle(radius, params.barLength, params.pitchAngle) +
+        Math.floor(random() * 2) * armSpacing +
+        sampleArmScatter(params.armWidth, random)
+      : random() * Math.PI * 2
+
+    const temperatureBias = isArmStar
+      ? offsetTemperatureBias(params.starTemperatureBias, ARM_TEMPERATURE_BOOST)
+      : params.starTemperatureBias
 
     particles.push({
       radius,
       angle0,
       height: sampleVerticalOffset(params.diskScaleHeight, random),
       angularVelocity: angularVelocity(radius, params.rotationV0, params.rotationCoreRadius),
+      color: sampleStarColor(temperatureBias, random),
     })
   }
 

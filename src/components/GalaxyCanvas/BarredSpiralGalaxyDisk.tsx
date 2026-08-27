@@ -11,17 +11,15 @@ import {
 import { useSimulationStore } from '../../store/simulationStore'
 import { attachStarFieldBuffers, dustOpacity } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
-import { MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
+import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
 
 // The bar and the arms it feeds are locked to one shared pattern speed — real
 // barred galaxies typically show the bar and inner spiral corotating, at least
 // approximately (unlike a plain spiral's arms, which have their own pattern
 // speed independent of the disk's rotation curve).
 const BAR_PATTERN_SPEED = DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barPatternSpeed * TIME_SCALE
+const BAR_BRIGHTNESS = MAX_BRIGHTNESS
 
-const BAR_COLOR = new THREE.Color('#ffe8b8')
-const DISK_COLOR = new THREE.Color('#8f7a63')
-const ARM_COLOR = new THREE.Color('#bcd6ff')
 const STAR_SPRITE = createStarSpriteTexture()
 
 export function BarredSpiralGalaxyDisk() {
@@ -34,6 +32,7 @@ export function BarredSpiralGalaxyDisk() {
   const starsPercent = useSimulationStore((s) => s.starsPercent)
   const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
   const dustPercent = useSimulationStore((s) => s.dustPercent)
+  const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
 
   const particleCount = Math.max(
     MIN_PARTICLE_COUNT,
@@ -52,9 +51,10 @@ export function BarredSpiralGalaxyDisk() {
       ...DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS,
       particleCount,
       rotationV0,
+      starTemperatureBias,
     })
     buffersRef.current = attachStarFieldBuffers(geometry, particlesRef.current)
-  }, [particleCount, rotationV0])
+  }, [particleCount, rotationV0, starTemperatureBias])
 
   useFrame((state) => {
     const geometry = pointsRef.current?.geometry
@@ -63,7 +63,6 @@ export function BarredSpiralGalaxyDisk() {
     if (!geometry || !buffers || particles.length === 0) return
 
     const t = state.clock.elapsedTime
-    const scratchColor = new THREE.Color()
     const barLength = DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.barLength
 
     for (let i = 0; i < particles.length; i++) {
@@ -74,9 +73,8 @@ export function BarredSpiralGalaxyDisk() {
       buffers.positions[i * 3 + 1] = particle.height
       buffers.positions[i * 3 + 2] = particle.radius * Math.sin(angle)
 
-      if (particle.radius <= barLength) {
-        scratchColor.copy(BAR_COLOR)
-      } else {
+      let brightness = BAR_BRIGHTNESS
+      if (particle.radius > barLength) {
         const armOffset = angularOffsetFromNearestArm(
           angle - BAR_PATTERN_SPEED * t,
           particle.radius,
@@ -87,12 +85,12 @@ export function BarredSpiralGalaxyDisk() {
         const armProximity = Math.exp(
           -((armOffset / DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS.armWidth) ** 2),
         )
-        scratchColor.copy(DISK_COLOR).lerp(ARM_COLOR, armProximity)
+        brightness = MIN_BRIGHTNESS + (MAX_BRIGHTNESS - MIN_BRIGHTNESS) * armProximity
       }
 
-      buffers.colors[i * 3] = scratchColor.r
-      buffers.colors[i * 3 + 1] = scratchColor.g
-      buffers.colors[i * 3 + 2] = scratchColor.b
+      buffers.colors[i * 3] = particle.color.r * brightness
+      buffers.colors[i * 3 + 1] = particle.color.g * brightness
+      buffers.colors[i * 3 + 2] = particle.color.b * brightness
     }
 
     const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute
@@ -116,6 +114,7 @@ export function BarredSpiralGalaxyDisk() {
         sizeAttenuation
         transparent
         opacity={0.9}
+        blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
     </points>

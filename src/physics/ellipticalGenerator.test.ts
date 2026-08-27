@@ -8,6 +8,7 @@ const baseParams: EllipticalGalaxyParams = {
   sersicIndex: 4,
   flattening: 0.4,
   rotationSpeed: 14,
+  starTemperatureBias: 50,
 }
 
 describe('generateEllipticalGalaxyParticles', () => {
@@ -24,6 +25,10 @@ describe('generateEllipticalGalaxyParticles', () => {
       expect(Number.isFinite(p.angle0)).toBe(true)
       expect(Number.isFinite(p.height)).toBe(true)
       expect(p.angularVelocity).toBe(baseParams.rotationSpeed)
+      for (const channel of [p.color.r, p.color.g, p.color.b]) {
+        expect(channel).toBeGreaterThanOrEqual(0)
+        expect(channel).toBeLessThanOrEqual(1)
+      }
     }
   })
 
