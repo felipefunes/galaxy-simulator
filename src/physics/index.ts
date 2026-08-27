@@ -15,4 +15,18 @@ export {
 } from './spiralArms'
 export { generateSpiralGalaxyParticles } from './galaxyGenerator'
 export type { SpiralGalaxyParams, Particle } from './galaxyGenerator'
-export { DEFAULT_SPIRAL_GALAXY_PARAMS } from './defaultGalaxyParams'
+export {
+  sersicIntensity,
+  findSersicEnvelopePeak,
+  sampleSersicRadius,
+  sampleFlattenedSphericalPosition,
+} from './ellipticalProfile'
+export { generateEllipticalGalaxyParticles } from './ellipticalGenerator'
+export type { EllipticalGalaxyParams } from './ellipticalGenerator'
+export { generateBarredSpiralGalaxyParticles } from './barredGenerator'
+export type { BarredSpiralGalaxyParams } from './barredGenerator'
+export {
+  DEFAULT_SPIRAL_GALAXY_PARAMS,
+  DEFAULT_ELLIPTICAL_GALAXY_PARAMS,
+  DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS,
+} from './defaultGalaxyParams'

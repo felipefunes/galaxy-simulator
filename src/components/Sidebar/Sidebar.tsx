@@ -2,10 +2,10 @@ import type { GalaxyShape } from '../../store/simulationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import './Sidebar.css'
 
-const SHAPE_OPTIONS: { value: GalaxyShape; label: string; available: boolean }[] = [
-  { value: 'spiral', label: 'Espiral', available: true },
-  { value: 'barred-spiral', label: 'Espiral barrada', available: false },
-  { value: 'elliptical', label: 'Elíptica', available: false },
+const SHAPE_OPTIONS: { value: GalaxyShape; label: string }[] = [
+  { value: 'spiral', label: 'Espiral' },
+  { value: 'barred-spiral', label: 'Espiral barrada' },
+  { value: 'elliptical', label: 'Elíptica' },
 ]
 
 export function Sidebar() {
@@ -34,11 +34,9 @@ export function Sidebar() {
               type="button"
               className="sidebar__shape-button"
               aria-pressed={shape === option.value}
-              disabled={!option.available}
               onClick={() => setShape(option.value)}
             >
               {option.label}
-              {!option.available && <span className="sidebar__badge">próximamente</span>}
             </button>
           ))}
         </div>
@@ -48,12 +46,16 @@ export function Sidebar() {
         <h2 className="sidebar__section-title">Composición</h2>
 
         <label className="sidebar__slider">
-          <span>Materia oscura ({darkMatterPercent}%)</span>
+          <span>
+            Materia oscura ({darkMatterPercent}%)
+            {shape === 'elliptical' && ' — sin efecto en elípticas'}
+          </span>
           <input
             type="range"
             min={0}
             max={100}
             value={darkMatterPercent}
+            disabled={shape === 'elliptical'}
             onChange={(e) => setDarkMatterPercent(Number(e.target.value))}
           />
         </label>
@@ -82,9 +84,9 @@ export function Sidebar() {
       </section>
 
       <p className="sidebar__note">
-        Espiral barrada y elíptica llegan en un próximo PR. El polvo hoy atenúa el
-        brillo general; los carriles de polvo siguiendo los brazos son un ajuste
-        futuro.
+        El polvo hoy atenúa el brillo general; los carriles de polvo siguiendo los
+        brazos y la clasificación espectral de estrellas quedan para un próximo
+        ajuste.
       </p>
     </aside>
   )
