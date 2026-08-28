@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { GalaxyShape } from '../../store/simulationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import './Sidebar.css'
@@ -24,9 +25,28 @@ export function Sidebar() {
   const setTimeSpeed = useSimulationStore((s) => s.setTimeSpeed)
 
   const isElliptical = shape === 'elliptical'
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <aside className="sidebar">
+    <>
+      <button
+        type="button"
+        className="sidebar__mobile-toggle"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        {isOpen ? 'Cerrar ✕' : 'Controles ⚙'}
+      </button>
+
+      {isOpen && (
+        <div
+          className="sidebar__backdrop"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={isOpen ? 'sidebar sidebar--open' : 'sidebar'}>
       <h1 className="sidebar__title">Galaxy Simulator</h1>
       <p className="sidebar__subtitle">
         Simulación interactiva de estructura y cinemática galáctica.
@@ -191,6 +211,7 @@ export function Sidebar() {
           </p>
         </label>
       </section>
-    </aside>
+      </aside>
+    </>
   )
 }
