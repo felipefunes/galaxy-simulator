@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { t } from '../../i18n'
 import type { GalaxyShape } from '../../store/simulationStore'
 import { useSimulationStore } from '../../store/simulationStore'
 import './Sidebar.css'
 
 const SHAPE_OPTIONS: { value: GalaxyShape; label: string }[] = [
-  { value: 'spiral', label: 'Espiral' },
-  { value: 'elliptical', label: 'Elíptica' },
+  { value: 'spiral', label: t.shapeSpiral },
+  { value: 'elliptical', label: t.shapeElliptical },
 ]
 
 export function Sidebar() {
@@ -35,7 +36,7 @@ export function Sidebar() {
         aria-expanded={isOpen}
         onClick={() => setIsOpen((open) => !open)}
       >
-        {isOpen ? 'Cerrar ✕' : 'Controles ⚙'}
+        {isOpen ? t.mobileToggleClose : t.mobileToggleOpen}
       </button>
 
       {isOpen && (
@@ -47,170 +48,144 @@ export function Sidebar() {
       )}
 
       <aside className={isOpen ? 'sidebar sidebar--open' : 'sidebar'}>
-      <h1 className="sidebar__title">Galaxy Simulator</h1>
-      <p className="sidebar__subtitle">
-        Simulación interactiva de estructura y cinemática galáctica.
-      </p>
+        <h1 className="sidebar__title">{t.appTitle}</h1>
+        <p className="sidebar__subtitle">{t.appSubtitle}</p>
 
-      <section className="sidebar__section">
-        <h2 className="sidebar__section-title">Forma</h2>
-        <div className="sidebar__shape-options">
-          {SHAPE_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              className="sidebar__shape-button"
-              aria-pressed={shape === option.value}
-              onClick={() => setShape(option.value)}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <section className="sidebar__section">
+          <h2 className="sidebar__section-title">{t.shapeSectionTitle}</h2>
+          <div className="sidebar__shape-options">
+            {SHAPE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className="sidebar__shape-button"
+                aria-pressed={shape === option.value}
+                onClick={() => setShape(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
 
-        {!isElliptical && (
-          <label className="sidebar__slider sidebar__slider--nested">
-            <span>Fuerza de barra</span>
+          {!isElliptical && (
+            <label className="sidebar__slider sidebar__slider--nested">
+              <span>{t.barStrengthLabel}</span>
+              <div className="sidebar__endpoints">
+                <span>{t.barStrengthMin}</span>
+                <span>{t.barStrengthMax}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={barStrength}
+                onChange={(e) => setBarStrength(Number(e.target.value))}
+              />
+              <p className="sidebar__hint">{t.barStrengthHint}</p>
+            </label>
+          )}
+        </section>
+
+        <section className="sidebar__section">
+          <h2 className="sidebar__section-title">{t.compositionSectionTitle}</h2>
+
+          <label className="sidebar__slider">
+            <span>{t.starsLabel}</span>
             <div className="sidebar__endpoints">
-              <span>Sin barra</span>
-              <span>Barra fuerte</span>
+              <span>{t.starsMin}</span>
+              <span>{t.starsMax}</span>
             </div>
             <input
               type="range"
               min={0}
               max={100}
-              value={barStrength}
-              onChange={(e) => setBarStrength(Number(e.target.value))}
+              value={starsPercent}
+              onChange={(e) => setStarsPercent(Number(e.target.value))}
             />
-            <p className="sidebar__hint">
-              Una barra no es una forma aparte: es una espiral cuyo centro, con el
-              tiempo, desarrolla una estructura rígida y alargada que rota como un
-              bloque — el resto del disco sigue girando a su propio ritmo alrededor.
-            </p>
           </label>
-        )}
-      </section>
 
-      <section className="sidebar__section">
-        <h2 className="sidebar__section-title">Composición</h2>
+          <label className="sidebar__slider">
+            <span>{t.temperatureLabel}</span>
+            <div className="sidebar__endpoints">
+              <span>
+                <i className="sidebar__swatch" style={{ background: '#ffcc6f' }} />
+                {t.temperatureCold}
+              </span>
+              <span>
+                {t.temperatureHot}
+                <i className="sidebar__swatch" style={{ background: '#9bb0ff' }} />
+              </span>
+            </div>
+            <div className="sidebar__temperature-track">
+              <div className="sidebar__temperature-gradient" />
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={starTemperatureBias}
+                onChange={(e) => setStarTemperatureBias(Number(e.target.value))}
+              />
+            </div>
+            <p className="sidebar__hint">{t.temperatureHint}</p>
+          </label>
 
-        <label className="sidebar__slider">
-          <span>Cantidad de estrellas</span>
-          <div className="sidebar__endpoints">
-            <span>Pocas</span>
-            <span>Muchas</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={starsPercent}
-            onChange={(e) => setStarsPercent(Number(e.target.value))}
-          />
-        </label>
-
-        <label className="sidebar__slider">
-          <span>Temperatura de las estrellas</span>
-          <div className="sidebar__endpoints">
+          <label className="sidebar__slider">
             <span>
-              <i className="sidebar__swatch" style={{ background: '#ffcc6f' }} />
-              Frías
+              {t.darkMatterLabel(darkMatterPercent)}
+              {isElliptical && t.ellipticalSuffix}
             </span>
-            <span>
-              Calientes
-              <i className="sidebar__swatch" style={{ background: '#9bb0ff' }} />
-            </span>
-          </div>
-          <div className="sidebar__temperature-track">
-            <div className="sidebar__temperature-gradient" />
             <input
               type="range"
               min={0}
               max={100}
-              value={starTemperatureBias}
-              onChange={(e) => setStarTemperatureBias(Number(e.target.value))}
+              value={darkMatterPercent}
+              disabled={isElliptical}
+              onChange={(e) => setDarkMatterPercent(Number(e.target.value))}
             />
-          </div>
-          <p className="sidebar__hint">
-            Es como un metal calentándose: primero brilla rojo, y al ponerse muy
-            caliente brilla blanco-azulado. Acá pasa lo mismo — mové el control para
-            cambiar qué tan calientes (y azules) o frías (y rojas) son, en promedio,
-            las estrellas de la galaxia.
-          </p>
-        </label>
+            {isElliptical && <p className="sidebar__hint">{t.darkMatterEllipticalHint}</p>}
+          </label>
 
-        <label className="sidebar__slider">
-          <span>
-            Materia oscura ({darkMatterPercent}%)
-            {isElliptical && ' — sin efecto en elípticas'}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={darkMatterPercent}
-            disabled={isElliptical}
-            onChange={(e) => setDarkMatterPercent(Number(e.target.value))}
-          />
-          {isElliptical && (
-            <p className="sidebar__hint">
-              Las elípticas no giran de forma ordenada como un disco — sus estrellas
-              orbitan en direcciones más aleatorias, así que no hay una curva de
-              rotación a la que la materia oscura le dé forma.
-            </p>
-          )}
-        </label>
+          <label className="sidebar__slider">
+            <span>
+              {t.dustLabel}
+              {isElliptical && t.ellipticalSuffix}
+            </span>
+            <div className="sidebar__endpoints">
+              <span>{t.dustMin}</span>
+              <span>{t.dustMax}</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={dustPercent}
+              disabled={isElliptical}
+              onChange={(e) => setDustPercent(Number(e.target.value))}
+            />
+            {isElliptical && <p className="sidebar__hint">{t.dustEllipticalHint}</p>}
+          </label>
+        </section>
 
-        <label className="sidebar__slider">
-          <span>
-            Polvo
-            {isElliptical && ' — sin efecto en elípticas'}
-          </span>
-          <div className="sidebar__endpoints">
-            <span>Poco</span>
-            <span>Mucho</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={dustPercent}
-            disabled={isElliptical}
-            onChange={(e) => setDustPercent(Number(e.target.value))}
-          />
-          {isElliptical && (
-            <p className="sidebar__hint">
-              Las elípticas ya usaron casi todo su gas para formar estrellas hace
-              mucho tiempo, así que casi no les queda polvo.
-            </p>
-          )}
-        </label>
-      </section>
+        <section className="sidebar__section">
+          <h2 className="sidebar__section-title">{t.timeSectionTitle}</h2>
 
-      <section className="sidebar__section">
-        <h2 className="sidebar__section-title">Tiempo</h2>
-
-        <label className="sidebar__slider">
-          <span>Velocidad de la simulación (×{timeSpeed.toFixed(1)})</span>
-          <div className="sidebar__endpoints">
-            <span>Pausado</span>
-            <span>Rápido</span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={5}
-            step={0.1}
-            value={timeSpeed}
-            onChange={(e) => setTimeSpeed(Number(e.target.value))}
-          />
-          <p className="sidebar__hint">
-            En ×1 ya es un time-lapse: una órbita real tarda millones de años, acá
-            unos segundos. Este control acelera o frena ese time-lapse — en 0 la
-            galaxia queda congelada.
-          </p>
-        </label>
-      </section>
+          <label className="sidebar__slider">
+            <span>{t.timeSpeedLabel(timeSpeed.toFixed(1))}</span>
+            <div className="sidebar__endpoints">
+              <span>{t.timeMin}</span>
+              <span>{t.timeMax}</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={5}
+              step={0.1}
+              value={timeSpeed}
+              onChange={(e) => setTimeSpeed(Number(e.target.value))}
+            />
+            <p className="sidebar__hint">{t.timeHint}</p>
+          </label>
+        </section>
       </aside>
     </>
   )

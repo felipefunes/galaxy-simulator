@@ -30,11 +30,22 @@ src/
   components/       componentes de UI (Sidebar, GalaxyCanvas, ...)
   physics/          modelo cinemático puro, sin dependencias de React/three (desde PR 2)
   store/            estado global (zustand) de los parámetros de simulación
+  i18n/             traducciones EN/ES (ver abajo)
 ```
 
 El módulo `physics/` debe mantenerse como funciones puras testeables sin DOM ni three.js,
 para poder testear la matemática (curvas de rotación, generación de espirales, perfiles de
 densidad) de forma aislada del render.
+
+## Idioma
+
+El sitio detecta el idioma del navegador (`navigator.languages`) una sola vez al cargar —
+español si el idioma preferido empieza con "es", inglés en cualquier otro caso (fallback).
+No hay selector manual. `src/i18n/detectLocale.ts` tiene la lógica pura (testeada),
+`src/i18n/translations.ts` el diccionario, y `src/i18n/index.ts` expone `t` (las strings
+activas) y `locale`. Los componentes importan `t` y usan `t.claveDeTexto` en vez de texto
+hardcodeado. Los meta tags estáticos de `index.html` (SEO/Open Graph, que un crawler sin JS
+solo puede ver en un idioma) quedan en inglés, consistente con el fallback de la app.
 
 ## Deploy
 
