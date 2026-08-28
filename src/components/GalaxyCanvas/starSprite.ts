@@ -15,10 +15,13 @@ export function createStarSpriteTexture(): THREE.Texture {
   const context = canvas.getContext('2d')
   if (!context) return new THREE.Texture()
 
+  // A small hard-bright core plus a wider, softer halo reads as a real glint
+  // under additive blending, instead of a uniformly soft blob.
   const center = size / 2
   const gradient = context.createRadialGradient(center, center, 0, center, center, center)
   gradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
-  gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.7)')
+  gradient.addColorStop(0.15, 'rgba(255, 255, 255, 0.95)')
+  gradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.45)')
   gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
 
   context.fillStyle = gradient

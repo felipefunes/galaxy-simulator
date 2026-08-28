@@ -5,7 +5,13 @@ import { DEFAULT_ELLIPTICAL_GALAXY_PARAMS, generateEllipticalGalaxyParticles, ty
 import { useSimulationStore } from '../../store/simulationStore'
 import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
-import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
+import {
+  MAX_BRIGHTNESS,
+  MIN_BRIGHTNESS,
+  MIN_PARTICLE_COUNT,
+  STAR_POINT_SIZE,
+  TIME_SCALE,
+} from './constants'
 
 const STAR_SPRITE = createStarSpriteTexture()
 
@@ -71,7 +77,7 @@ export function EllipticalGalaxyDisk() {
     <points ref={pointsRef}>
       <bufferGeometry ref={geometryRef} />
       <pointsMaterial
-        size={0.12}
+        size={STAR_POINT_SIZE}
         map={STAR_SPRITE}
         vertexColors
         sizeAttenuation

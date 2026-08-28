@@ -20,14 +20,6 @@
   line-height: 1.4;
 }
 
-.sidebar__note {
-  margin: 20px 0 0;
-  font-size: 0.8rem;
-  color: var(--color-text-dim);
-  font-style: italic;
-  line-height: 1.4;
-}
-
 .sidebar__section {
   margin-top: 24px;
 }
@@ -76,6 +68,13 @@
   color: var(--color-text-dim);
 }
 
+.sidebar__slider--nested {
+  margin-top: 14px;
+  margin-bottom: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
 .sidebar__slider input[type='range'] {
   accent-color: var(--color-accent);
   width: 100%;
@@ -84,4 +83,93 @@
 .sidebar__slider input[type='range']:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+.sidebar__endpoints {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: var(--color-text-dim);
+}
+
+.sidebar__swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin: 0 5px;
+  vertical-align: middle;
+}
+
+.sidebar__hint {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+
+.sidebar__temperature-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+.sidebar__temperature-gradient {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    #ffcc6f,
+    #ffd2a1,
+    #fff4ea,
+    #f8f7ff,
+    #cad7ff,
+    #aabfff,
+    #9bb0ff
+  );
+  pointer-events: none;
+}
+
+.sidebar__temperature-track input[type='range'] {
+  position: relative;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.sidebar__temperature-track input[type='range']::-webkit-slider-runnable-track {
+  background: transparent;
+  height: 6px;
+}
+
+.sidebar__temperature-track input[type='range']::-moz-range-track {
+  background: transparent;
+  height: 6px;
+}
+
+.sidebar__temperature-track input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--color-accent);
+  cursor: pointer;
+}
+
+.sidebar__temperature-track input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--color-accent);
+  cursor: pointer;
 }
