@@ -14,12 +14,14 @@ export function Sidebar() {
   const starsPercent = useSimulationStore((s) => s.starsPercent)
   const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
   const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
+  const timeSpeed = useSimulationStore((s) => s.timeSpeed)
   const setShape = useSimulationStore((s) => s.setShape)
   const setBarStrength = useSimulationStore((s) => s.setBarStrength)
   const setDustPercent = useSimulationStore((s) => s.setDustPercent)
   const setStarsPercent = useSimulationStore((s) => s.setStarsPercent)
   const setDarkMatterPercent = useSimulationStore((s) => s.setDarkMatterPercent)
   const setStarTemperatureBias = useSimulationStore((s) => s.setStarTemperatureBias)
+  const setTimeSpeed = useSimulationStore((s) => s.setTimeSpeed)
 
   const isElliptical = shape === 'elliptical'
 
@@ -162,6 +164,31 @@ export function Sidebar() {
               mucho tiempo, así que casi no les queda polvo.
             </p>
           )}
+        </label>
+      </section>
+
+      <section className="sidebar__section">
+        <h2 className="sidebar__section-title">Tiempo</h2>
+
+        <label className="sidebar__slider">
+          <span>Velocidad de la simulación (×{timeSpeed.toFixed(1)})</span>
+          <div className="sidebar__endpoints">
+            <span>Pausado</span>
+            <span>Rápido</span>
+          </div>
+          <input
+            type="range"
+            min={0}
+            max={5}
+            step={0.1}
+            value={timeSpeed}
+            onChange={(e) => setTimeSpeed(Number(e.target.value))}
+          />
+          <p className="sidebar__hint">
+            En ×1 ya es un time-lapse: una órbita real tarda millones de años, acá
+            unos segundos. Este control acelera o frena ese time-lapse — en 0 la
+            galaxia queda congelada.
+          </p>
         </label>
       </section>
     </aside>

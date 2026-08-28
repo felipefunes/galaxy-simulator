@@ -23,12 +23,15 @@ interface SimulationState {
   darkMatterPercent: number
   /** 0 (cool/red) - 100 (hot/blue) spectral bias for sampled star colors (see physics/stellarClassification). */
   starTemperatureBias: number
+  /** Simulation-time multiplier: 0 pauses, 1 is the default speed. See GalaxyCanvas/simulationClock.ts. */
+  timeSpeed: number
   setShape: (shape: GalaxyShape) => void
   setBarStrength: (value: number) => void
   setDustPercent: (value: number) => void
   setStarsPercent: (value: number) => void
   setDarkMatterPercent: (value: number) => void
   setStarTemperatureBias: (value: number) => void
+  setTimeSpeed: (value: number) => void
 }
 
 export const useSimulationStore = create<SimulationState>((set) => ({
@@ -38,10 +41,12 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   starsPercent: 70,
   darkMatterPercent: 60,
   starTemperatureBias: 50,
+  timeSpeed: 1,
   setShape: (shape) => set({ shape }),
   setBarStrength: (barStrength) => set({ barStrength }),
   setDustPercent: (dustPercent) => set({ dustPercent }),
   setStarsPercent: (starsPercent) => set({ starsPercent }),
   setDarkMatterPercent: (darkMatterPercent) => set({ darkMatterPercent }),
   setStarTemperatureBias: (starTemperatureBias) => set({ starTemperatureBias }),
+  setTimeSpeed: (timeSpeed) => set({ timeSpeed }),
 }))
