@@ -2,6 +2,7 @@ import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { DUST_LANE_ANGULAR_OFFSET, logSpiralArmAngle } from '../../physics'
+import { simulationClock } from './simulationClock'
 import { TIME_SCALE } from './constants'
 
 const DUST_COLOR = '#3a2418'
@@ -61,13 +62,13 @@ export function DustLaneRibbon({
     return geoms
   }, [armCount, pitchAngle, armReferenceRadius, minRadius, maxRadius])
 
-  useFrame((state) => {
+  useFrame(() => {
     if (groupRef.current) {
       // Rotating the group by -patternSpeed·t here is the mirror image of how
       // a star's angle advances by +Ω·t elsewhere: THREE's rotateY(δ) moves a
       // point from angle θ to θ-δ, so δ must be negative to make the pattern's
       // angle increase over time the same way a star's does.
-      groupRef.current.rotation.y = -patternSpeed * TIME_SCALE * state.clock.elapsedTime
+      groupRef.current.rotation.y = -patternSpeed * TIME_SCALE * simulationClock.time
     }
   })
 

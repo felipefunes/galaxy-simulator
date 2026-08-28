@@ -11,6 +11,7 @@ import {
 } from '../../physics'
 import { useSimulationStore } from '../../store/simulationStore'
 import { DustLaneRibbon } from './DustLaneRibbon'
+import { simulationClock } from './simulationClock'
 import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
 import {
@@ -77,13 +78,13 @@ export function SpiralGalaxyDisk() {
     buffersRef.current = attachStarFieldBuffers(geometry, particlesRef.current)
   }, [particleCount, rotationV0, starTemperatureBias, barStrength])
 
-  useFrame((state) => {
+  useFrame(() => {
     const geometry = pointsRef.current?.geometry
     const buffers = buffersRef.current
     const particles = particlesRef.current
     if (!geometry || !buffers || particles.length === 0) return
 
-    const t = state.clock.elapsedTime
+    const t = simulationClock.time
 
     for (let i = 0; i < particles.length; i++) {
       const particle = particles[i]

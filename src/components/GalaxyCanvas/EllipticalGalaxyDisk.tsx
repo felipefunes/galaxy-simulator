@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { DEFAULT_ELLIPTICAL_GALAXY_PARAMS, generateEllipticalGalaxyParticles, type Particle } from '../../physics'
 import { useSimulationStore } from '../../store/simulationStore'
+import { simulationClock } from './simulationClock'
 import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
 import {
@@ -41,13 +42,13 @@ export function EllipticalGalaxyDisk() {
     buffersRef.current = attachStarFieldBuffers(geometry, particlesRef.current)
   }, [particleCount, starTemperatureBias])
 
-  useFrame((state) => {
+  useFrame(() => {
     const geometry = pointsRef.current?.geometry
     const buffers = buffersRef.current
     const particles = particlesRef.current
     if (!geometry || !buffers || particles.length === 0) return
 
-    const t = state.clock.elapsedTime
+    const t = simulationClock.time
     const effectiveRadius = DEFAULT_ELLIPTICAL_GALAXY_PARAMS.effectiveRadius
 
     for (let i = 0; i < particles.length; i++) {
