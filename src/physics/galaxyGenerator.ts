@@ -25,6 +25,22 @@ export interface SpiralGalaxyParams {
   armPopulationFraction: number
   /** 0-100 spectral temperature baseline for the disk population; see stellarClassification.ts. */
   starTemperatureBias: number
+  /**
+   * 0 (no bar, a plain spiral) to 1 (a fully-developed bar). A bar isn't a
+   * separate galaxy type the way an elliptical is — it's a secular
+   * instability that develops *within* a disk over time (Sellwood &
+   * Wilkinson 1993), so it's modeled as a continuum blended into the same
+   * generator rather than a discrete alternate shape.
+   */
+  barStrength: number
+  /** Full-strength (barStrength = 1) semi-major axis of the bar. */
+  barLength: number
+  /** Full-strength (barStrength = 1) semi-minor axis of the bar. */
+  barWidth: number
+  /** Full-strength (barStrength = 1) fraction of stars belonging to the bar. */
+  barPopulationFraction: number
+  /** The bar is a rigid rotator — every bar star shares this one angular velocity. */
+  barPatternSpeed: number
 }
 
 /**
@@ -43,9 +59,41 @@ export interface Particle {
   color: StarColor
 }
 
+/** Uniform sampling inside an ellipse of semi-axes (length, width) via rejection. */
+function sampleBarPosition(
+  length: number,
+  width: number,
+  random: () => number,
+): { radius: number; angle: number } {
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const u = (random() * 2 - 1) * length
+    const v = (random() * 2 - 1) * width
+    if ((u / length) ** 2 + (v / width) ** 2 <= 1) {
+      return { radius: Math.hypot(u, v), angle: Math.atan2(v, u) }
+    }
+  }
+  return { radius: 0, angle: 0 }
+}
+
 /**
- * Generates a disk of stars whose radii follow an exponential disk profile. Most
- * stars get a uniformly random initial angle (the smooth old disk); the rest
+ * The radius where the arm curve's angle is defined to be 0. With no bar this
+ * is the disk scale radius (arms wind up from near the visually "typical"
+ * radius); with a full bar it's the bar's own tip (arms visually pick up
+ * where the bar ends). Blended linearly in between so the curve's anchor
+ * moves continuously as barStrength changes instead of jumping.
+ */
+export function spiralArmReferenceRadius(
+  diskScaleRadius: number,
+  barLength: number,
+  barStrength: number,
+): number {
+  return diskScaleRadius * (1 - barStrength) + barLength * barStrength
+}
+
+/**
+ * Generates a disk of stars whose radii follow an exponential disk profile,
+ * optionally with a bar at the center (see `barStrength`). Most non-bar stars
+ * get a uniformly random initial angle (the smooth old disk); the rest
  * cluster around a logarithmic spiral, one cluster per arm evenly spaced every
  * 2π/armCount. Because each particle's angle evolves afterward at its own Ω(r)
  * (see `Particle`) rather than the pattern's, the arm-clustered stars will drift
@@ -60,12 +108,39 @@ export function generateSpiralGalaxyParticles(
   const particles: Particle[] = []
   const armSpacing = (2 * Math.PI) / params.armCount
 
+  const effectiveBarLength = params.barLength * params.barStrength
+  const effectiveBarWidth = params.barWidth * params.barStrength
+  const effectiveBarPopulationFraction = params.barPopulationFraction * params.barStrength
+  const armReferenceRadius = spiralArmReferenceRadius(
+    params.diskScaleRadius,
+    params.barLength,
+    params.barStrength,
+  )
+
   for (let i = 0; i < params.particleCount; i++) {
-    const radius = sampleExponentialDiskRadius(params.diskScaleRadius, random)
+    // effectiveBarPopulationFraction is exactly 0 when barStrength is 0, so
+    // this branch is naturally unreachable for a bar-less spiral — no
+    // separate "if barStrength > 0" guard needed.
+    if (random() < effectiveBarPopulationFraction) {
+      const { radius, angle } = sampleBarPosition(effectiveBarLength, effectiveBarWidth, random)
+      particles.push({
+        radius,
+        angle0: angle,
+        height: sampleVerticalOffset(params.diskScaleHeight * 0.6, random),
+        angularVelocity: params.barPatternSpeed,
+        color: sampleStarColor(params.starTemperatureBias, random),
+      })
+      continue
+    }
+
+    // Disk/arm stars live beyond the bar's tips (0 when there's no bar) —
+    // shifting the exponential profile outward keeps a real bar visually
+    // distinct instead of being swamped by disk stars sampled at small radii.
+    const radius = effectiveBarLength + sampleExponentialDiskRadius(params.diskScaleRadius, random)
     const isArmStar = random() < params.armPopulationFraction
 
     const angle0 = isArmStar
-      ? logSpiralArmAngle(radius, params.diskScaleRadius, params.pitchAngle) +
+      ? logSpiralArmAngle(radius, armReferenceRadius, params.pitchAngle) +
         Math.floor(random() * params.armCount) * armSpacing +
         sampleArmScatter(params.armWidth, random)
       : random() * Math.PI * 2

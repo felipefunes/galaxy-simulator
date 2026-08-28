@@ -6,7 +6,7 @@ import { TIME_SCALE } from './constants'
 
 const DUST_COLOR = '#3a2418'
 const MAX_OPACITY = 0.85
-const TUBE_RADIUS = 0.16
+const TUBE_RADIUS = 0.4
 const CURVE_SEGMENTS = 48
 
 interface DustLaneRibbonProps {

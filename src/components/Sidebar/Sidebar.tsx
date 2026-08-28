@@ -4,21 +4,24 @@ import './Sidebar.css'
 
 const SHAPE_OPTIONS: { value: GalaxyShape; label: string }[] = [
   { value: 'spiral', label: 'Espiral' },
-  { value: 'barred-spiral', label: 'Espiral barrada' },
   { value: 'elliptical', label: 'Elíptica' },
 ]
 
 export function Sidebar() {
   const shape = useSimulationStore((s) => s.shape)
+  const barStrength = useSimulationStore((s) => s.barStrength)
   const dustPercent = useSimulationStore((s) => s.dustPercent)
   const starsPercent = useSimulationStore((s) => s.starsPercent)
   const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
   const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
   const setShape = useSimulationStore((s) => s.setShape)
+  const setBarStrength = useSimulationStore((s) => s.setBarStrength)
   const setDustPercent = useSimulationStore((s) => s.setDustPercent)
   const setStarsPercent = useSimulationStore((s) => s.setStarsPercent)
   const setDarkMatterPercent = useSimulationStore((s) => s.setDarkMatterPercent)
   const setStarTemperatureBias = useSimulationStore((s) => s.setStarTemperatureBias)
+
+  const isElliptical = shape === 'elliptical'
 
   return (
     <aside className="sidebar">
@@ -42,28 +45,39 @@ export function Sidebar() {
             </button>
           ))}
         </div>
+
+        {!isElliptical && (
+          <label className="sidebar__slider sidebar__slider--nested">
+            <span>Fuerza de barra</span>
+            <div className="sidebar__endpoints">
+              <span>Sin barra</span>
+              <span>Barra fuerte</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={barStrength}
+              onChange={(e) => setBarStrength(Number(e.target.value))}
+            />
+            <p className="sidebar__hint">
+              Una barra no es una forma aparte: es una espiral cuyo centro, con el
+              tiempo, desarrolla una estructura rígida y alargada que rota como un
+              bloque — el resto del disco sigue girando a su propio ritmo alrededor.
+            </p>
+          </label>
+        )}
       </section>
 
       <section className="sidebar__section">
         <h2 className="sidebar__section-title">Composición</h2>
 
         <label className="sidebar__slider">
-          <span>
-            Materia oscura ({darkMatterPercent}%)
-            {shape === 'elliptical' && ' — sin efecto en elípticas'}
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={darkMatterPercent}
-            disabled={shape === 'elliptical'}
-            onChange={(e) => setDarkMatterPercent(Number(e.target.value))}
-          />
-        </label>
-
-        <label className="sidebar__slider">
-          <span>Estrellas ({starsPercent}%)</span>
+          <span>Cantidad de estrellas</span>
+          <div className="sidebar__endpoints">
+            <span>Pocas</span>
+            <span>Muchas</span>
+          </div>
           <input
             type="range"
             min={0}
@@ -74,38 +88,82 @@ export function Sidebar() {
         </label>
 
         <label className="sidebar__slider">
+          <span>Temperatura de las estrellas</span>
+          <div className="sidebar__endpoints">
+            <span>
+              <i className="sidebar__swatch" style={{ background: '#ffcc6f' }} />
+              Frías
+            </span>
+            <span>
+              Calientes
+              <i className="sidebar__swatch" style={{ background: '#9bb0ff' }} />
+            </span>
+          </div>
+          <div className="sidebar__temperature-track">
+            <div className="sidebar__temperature-gradient" />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={starTemperatureBias}
+              onChange={(e) => setStarTemperatureBias(Number(e.target.value))}
+            />
+          </div>
+          <p className="sidebar__hint">
+            Es como un metal calentándose: primero brilla rojo, y al ponerse muy
+            caliente brilla blanco-azulado. Acá pasa lo mismo — mové el control para
+            cambiar qué tan calientes (y azules) o frías (y rojas) son, en promedio,
+            las estrellas de la galaxia.
+          </p>
+        </label>
+
+        <label className="sidebar__slider">
           <span>
-            Polvo ({dustPercent}%)
-            {shape === 'elliptical' && ' — sin efecto en elípticas'}
+            Materia oscura ({darkMatterPercent}%)
+            {isElliptical && ' — sin efecto en elípticas'}
           </span>
           <input
             type="range"
             min={0}
             max={100}
-            value={dustPercent}
-            disabled={shape === 'elliptical'}
-            onChange={(e) => setDustPercent(Number(e.target.value))}
+            value={darkMatterPercent}
+            disabled={isElliptical}
+            onChange={(e) => setDarkMatterPercent(Number(e.target.value))}
           />
+          {isElliptical && (
+            <p className="sidebar__hint">
+              Las elípticas no giran de forma ordenada como un disco — sus estrellas
+              orbitan en direcciones más aleatorias, así que no hay una curva de
+              rotación a la que la materia oscura le dé forma.
+            </p>
+          )}
         </label>
 
         <label className="sidebar__slider">
-          <span>Temperatura estelar (frías ↔ calientes)</span>
+          <span>
+            Polvo
+            {isElliptical && ' — sin efecto en elípticas'}
+          </span>
+          <div className="sidebar__endpoints">
+            <span>Poco</span>
+            <span>Mucho</span>
+          </div>
           <input
             type="range"
             min={0}
             max={100}
-            value={starTemperatureBias}
-            onChange={(e) => setStarTemperatureBias(Number(e.target.value))}
+            value={dustPercent}
+            disabled={isElliptical}
+            onChange={(e) => setDustPercent(Number(e.target.value))}
           />
+          {isElliptical && (
+            <p className="sidebar__hint">
+              Las elípticas ya usaron casi todo su gas para formar estrellas hace
+              mucho tiempo, así que casi no les queda polvo.
+            </p>
+          )}
         </label>
       </section>
-
-      <p className="sidebar__note">
-        La temperatura estelar sesga el muestreo de tipos espectrales (O-B-A-F-G-K-M,
-        de calientes/azules a frías/rojas) de cada estrella. El polvo traza carriles
-        oscuros junto a los brazos (elípticas no tienen, en la vida real son pobres
-        en gas y polvo).
-      </p>
     </aside>
   )
 }

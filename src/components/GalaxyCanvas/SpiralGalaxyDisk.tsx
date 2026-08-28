@@ -6,19 +6,29 @@ import {
   angularOffsetFromNearestArm,
   generateSpiralGalaxyParticles,
   rotationV0FromDarkMatterFraction,
+  spiralArmReferenceRadius,
   type Particle,
 } from '../../physics'
 import { useSimulationStore } from '../../store/simulationStore'
 import { DustLaneRibbon } from './DustLaneRibbon'
 import { attachStarFieldBuffers } from './starFieldBuffers'
 import { createStarSpriteTexture } from './starSprite'
-import { MAX_BRIGHTNESS, MIN_BRIGHTNESS, MIN_PARTICLE_COUNT, TIME_SCALE } from './constants'
+import {
+  MAX_BRIGHTNESS,
+  MIN_BRIGHTNESS,
+  MIN_PARTICLE_COUNT,
+  STAR_POINT_SIZE,
+  TIME_SCALE,
+} from './constants'
 
-// The spiral pattern rotates rigidly at a single speed (Lin & Shu 1964 density
-// wave theory), close to Ω(r) at mid-disk — stars visibly stream in and out of the
-// arms instead of the whole disk spinning in lockstep.
+// A plain spiral's arms have their own pattern speed (Lin & Shu 1964), close
+// to Ω(r) at mid-disk. A bar rotates faster and, when present, the arms it
+// feeds are locked to *its* pattern speed instead — real barred galaxies
+// typically show the bar and inner spiral corotating. Blended by barStrength
+// so the transition from one regime to the other is continuous.
 const SPIRAL_PATTERN_SPEED_UNSCALED = 35
-const SPIRAL_PATTERN_SPEED = SPIRAL_PATTERN_SPEED_UNSCALED * TIME_SCALE
+const BAR_PATTERN_SPEED_UNSCALED = DEFAULT_SPIRAL_GALAXY_PARAMS.barPatternSpeed
+const BAR_BRIGHTNESS = MAX_BRIGHTNESS
 
 const STAR_SPRITE = createStarSpriteTexture()
 
@@ -32,6 +42,7 @@ export function SpiralGalaxyDisk() {
   const darkMatterPercent = useSimulationStore((s) => s.darkMatterPercent)
   const dustPercent = useSimulationStore((s) => s.dustPercent)
   const starTemperatureBias = useSimulationStore((s) => s.starTemperatureBias)
+  const barStrength = useSimulationStore((s) => s.barStrength) / 100
 
   const particleCount = Math.max(
     MIN_PARTICLE_COUNT,
@@ -42,6 +53,16 @@ export function SpiralGalaxyDisk() {
     DEFAULT_SPIRAL_GALAXY_PARAMS.rotationV0,
   )
 
+  const effectiveBarLength = DEFAULT_SPIRAL_GALAXY_PARAMS.barLength * barStrength
+  const armReferenceRadius = spiralArmReferenceRadius(
+    DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius,
+    DEFAULT_SPIRAL_GALAXY_PARAMS.barLength,
+    barStrength,
+  )
+  const patternSpeedUnscaled =
+    SPIRAL_PATTERN_SPEED_UNSCALED * (1 - barStrength) + BAR_PATTERN_SPEED_UNSCALED * barStrength
+  const patternSpeed = patternSpeedUnscaled * TIME_SCALE
+
   useEffect(() => {
     const geometry = geometryRef.current
     if (!geometry) return
@@ -51,9 +72,10 @@ export function SpiralGalaxyDisk() {
       particleCount,
       rotationV0,
       starTemperatureBias,
+      barStrength,
     })
     buffersRef.current = attachStarFieldBuffers(geometry, particlesRef.current)
-  }, [particleCount, rotationV0, starTemperatureBias])
+  }, [particleCount, rotationV0, starTemperatureBias, barStrength])
 
   useFrame((state) => {
     const geometry = pointsRef.current?.geometry
@@ -71,15 +93,18 @@ export function SpiralGalaxyDisk() {
       buffers.positions[i * 3 + 1] = particle.height
       buffers.positions[i * 3 + 2] = particle.radius * Math.sin(angle)
 
-      const armOffset = angularOffsetFromNearestArm(
-        angle - SPIRAL_PATTERN_SPEED * t,
-        particle.radius,
-        DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius,
-        DEFAULT_SPIRAL_GALAXY_PARAMS.pitchAngle,
-        DEFAULT_SPIRAL_GALAXY_PARAMS.armCount,
-      )
-      const armProximity = Math.exp(-((armOffset / DEFAULT_SPIRAL_GALAXY_PARAMS.armWidth) ** 2))
-      const brightness = MIN_BRIGHTNESS + (MAX_BRIGHTNESS - MIN_BRIGHTNESS) * armProximity
+      let brightness = BAR_BRIGHTNESS
+      if (particle.radius > effectiveBarLength) {
+        const armOffset = angularOffsetFromNearestArm(
+          angle - patternSpeed * t,
+          particle.radius,
+          armReferenceRadius,
+          DEFAULT_SPIRAL_GALAXY_PARAMS.pitchAngle,
+          DEFAULT_SPIRAL_GALAXY_PARAMS.armCount,
+        )
+        const armProximity = Math.exp(-((armOffset / DEFAULT_SPIRAL_GALAXY_PARAMS.armWidth) ** 2))
+        brightness = MIN_BRIGHTNESS + (MAX_BRIGHTNESS - MIN_BRIGHTNESS) * armProximity
+      }
 
       buffers.colors[i * 3] = particle.color.r * brightness
       buffers.colors[i * 3 + 1] = particle.color.g * brightness
@@ -97,7 +122,7 @@ export function SpiralGalaxyDisk() {
       <points ref={pointsRef}>
         <bufferGeometry ref={geometryRef} />
         <pointsMaterial
-          size={0.12}
+          size={STAR_POINT_SIZE}
           map={STAR_SPRITE}
           vertexColors
           sizeAttenuation
@@ -110,10 +135,10 @@ export function SpiralGalaxyDisk() {
       <DustLaneRibbon
         armCount={DEFAULT_SPIRAL_GALAXY_PARAMS.armCount}
         pitchAngle={DEFAULT_SPIRAL_GALAXY_PARAMS.pitchAngle}
-        armReferenceRadius={DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius}
-        minRadius={DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 0.3}
-        maxRadius={DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 5}
-        patternSpeed={SPIRAL_PATTERN_SPEED_UNSCALED}
+        armReferenceRadius={armReferenceRadius}
+        minRadius={Math.max(effectiveBarLength, DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 0.3)}
+        maxRadius={effectiveBarLength + DEFAULT_SPIRAL_GALAXY_PARAMS.diskScaleRadius * 5}
+        patternSpeed={patternSpeedUnscaled}
         dustPercent={dustPercent}
       />
     </>

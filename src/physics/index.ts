@@ -14,7 +14,7 @@ export {
   sampleArmScatter,
   DUST_LANE_ANGULAR_OFFSET,
 } from './spiralArms'
-export { generateSpiralGalaxyParticles } from './galaxyGenerator'
+export { generateSpiralGalaxyParticles, spiralArmReferenceRadius } from './galaxyGenerator'
 export type { SpiralGalaxyParams, Particle } from './galaxyGenerator'
 export {
   sersicIntensity,
@@ -24,12 +24,9 @@ export {
 } from './ellipticalProfile'
 export { generateEllipticalGalaxyParticles } from './ellipticalGenerator'
 export type { EllipticalGalaxyParams } from './ellipticalGenerator'
-export { generateBarredSpiralGalaxyParticles } from './barredGenerator'
-export type { BarredSpiralGalaxyParams } from './barredGenerator'
 export { sampleStarColor, offsetTemperatureBias } from './stellarClassification'
 export type { StarColor } from './stellarClassification'
 export {
   DEFAULT_SPIRAL_GALAXY_PARAMS,
   DEFAULT_ELLIPTICAL_GALAXY_PARAMS,
-  DEFAULT_BARRED_SPIRAL_GALAXY_PARAMS,
 } from './defaultGalaxyParams'

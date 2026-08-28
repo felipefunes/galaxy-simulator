@@ -1,9 +1,16 @@
 import { create } from 'zustand'
 
-export type GalaxyShape = 'spiral' | 'barred-spiral' | 'elliptical'
+export type GalaxyShape = 'spiral' | 'elliptical'
 
 interface SimulationState {
   shape: GalaxyShape
+  /**
+   * 0-100 — how developed the bar is. A bar is a secular instability that
+   * develops within a spiral disk over time, not a separate galaxy type, so
+   * it's a slider on top of "spiral" rather than its own shape. No effect on
+   * ellipticals.
+   */
+  barStrength: number
   /**
    * % dust — controls how much material populates the dust lanes tracing the
    * spiral arms (see physics/dustLane). No effect on ellipticals, which are
@@ -17,6 +24,7 @@ interface SimulationState {
   /** 0 (cool/red) - 100 (hot/blue) spectral bias for sampled star colors (see physics/stellarClassification). */
   starTemperatureBias: number
   setShape: (shape: GalaxyShape) => void
+  setBarStrength: (value: number) => void
   setDustPercent: (value: number) => void
   setStarsPercent: (value: number) => void
   setDarkMatterPercent: (value: number) => void
@@ -25,11 +33,13 @@ interface SimulationState {
 
 export const useSimulationStore = create<SimulationState>((set) => ({
   shape: 'spiral',
+  barStrength: 0,
   dustPercent: 30,
   starsPercent: 70,
   darkMatterPercent: 60,
   starTemperatureBias: 50,
   setShape: (shape) => set({ shape }),
+  setBarStrength: (barStrength) => set({ barStrength }),
   setDustPercent: (dustPercent) => set({ dustPercent }),
   setStarsPercent: (starsPercent) => set({ starsPercent }),
   setDarkMatterPercent: (darkMatterPercent) => set({ darkMatterPercent }),
