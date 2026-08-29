@@ -24,3 +24,7 @@ Este repo se despliega en [Render](https://render.com) como Static Site vía blu
 (`render.yaml`).
 
 Ver [`CLAUDE.md`](./CLAUDE.md) para el detalle de arquitectura y el modelo físico usado.
+
+## Licencia
+
+Open source bajo licencia [MIT](./LICENSE).
