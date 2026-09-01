@@ -1,0 +1,61 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+    steps:
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Skip major version bumps
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          echo "::notice::Major version bump (${{ steps.metadata.outputs.dependency-names }}) — leaving for manual review."
+          exit 1
+
+      - name: Skip sensitive dependencies
+        env:
+          DEP_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+        run: |
+          # Keep this pattern in sync across repos. Anything auth/crypto/payment/session
+          # related always gets a human look, regardless of semver bump size.
+          PATTERN='(^|[/_.-])(auth|oauth|openid|saml|jwt|jsonwebtoken|passport|crypto|cipher|bcrypt|argon2|scrypt|ssl|tls|security|helmet|csrf|cors|session|secret|vault|kms|payment|stripe|paypal|braintree|billing)([/_.-]|$)'
+          if echo "$DEP_NAMES" | grep -Eiq "$PATTERN"; then
+            echo "::notice::Sensitive dependency ($DEP_NAMES) — leaving for manual review."
+            exit 1
+          fi
+
+      - name: Wait for status checks
+        run: |
+          sleep 20
+          gh pr checks "$PR_URL" --watch --interval 30
+
+      - name: Require at least one passing check
+        run: |
+          count=$(gh pr checks "$PR_URL" --json name --jq 'length')
+          if [ "$count" -eq 0 ]; then
+            echo "::warning::No CI checks are configured on this repo — refusing to auto-merge without verification. Set up CI, then this PR (or the next one) will auto-merge."
+            exit 1
+          fi
+
+      - name: Approve pull request
+        run: gh pr review "$PR_URL" --approve -b "Auto-approved: ${{ steps.metadata.outputs.update-type }} update, all checks passed."
+
+      - name: Merge pull request
+        run: gh pr merge "$PR_URL" --squash --delete-branch
