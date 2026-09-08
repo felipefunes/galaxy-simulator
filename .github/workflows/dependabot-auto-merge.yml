@@ -55,7 +55,8 @@ jobs:
           fi
 
       - name: Approve pull request
-        run: gh pr review "$PR_URL" --approve -b "Auto-approved: ${{ steps.metadata.outputs.update-type }} update, all checks passed."
+        run: |
+          gh pr review "$PR_URL" --approve -b "Auto-approved: ${{ steps.metadata.outputs.update-type }} update, all checks passed."
 
       - name: Merge pull request
         run: gh pr merge "$PR_URL" --squash --delete-branch
