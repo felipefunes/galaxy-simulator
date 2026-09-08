@@ -1,58 +1,59 @@
 # Galaxy Simulator
 
-Simulador interactivo de estructura y cinemática galáctica: una vista con un canvas 3D
-(react-three-fiber / three.js) donde se renderiza una galaxia procedural (espiral, espiral
-barrada o elíptica), y un sidebar con parámetros de visualización (forma, % de polvo,
-% de estrellas, % de materia oscura, velocidad de rotación).
+Interactive simulator of galactic structure and kinematics: a view with a 3D canvas
+(react-three-fiber / three.js) rendering a procedural galaxy (spiral, barred spiral, or
+elliptical), plus a sidebar with visualization parameters (shape, % dust, % stars,
+% dark matter, rotation speed).
 
-No es un N-body real. La cinemática se modela con curvas de rotación paramétricas y teoría
-de ondas de densidad (Lin-Shu) para los brazos espirales — ver el módulo `src/physics`
-(a partir del PR 2) para el detalle y las referencias de cada fórmula.
+This is not a real N-body simulation. The kinematics are modeled with parametric rotation
+curves and density-wave theory (Lin-Shu) for the spiral arms — see the `src/physics`
+module (starting from PR 2) for details and the references for each formula.
 
 ## Stack
 
 - Vite + React + TypeScript
-- react-three-fiber + drei + three.js para el render 3D
-- zustand para el estado de los parámetros del sidebar
-- vitest para tests (especialmente el módulo de física, que debe testearse aislado del render)
+- react-three-fiber + drei + three.js for the 3D render
+- zustand for the sidebar parameter state
+- vitest for tests (especially the physics module, which must be testable in isolation
+  from the render)
 
-## Comandos
+## Commands
 
-- `npm run dev` — servidor de desarrollo
-- `npm run build` — build de producción (`tsc -b && vite build`) a `dist/`
-- `npm run test` — corre la suite de vitest
+- `npm run dev` — development server
+- `npm run build` — production build (`tsc -b && vite build`) to `dist/`
+- `npm run test` — runs the vitest suite
 - `npm run lint` — eslint
 
-## Estructura
+## Structure
 
 ```
 src/
-  components/       componentes de UI (Sidebar, GalaxyCanvas, ...)
-  physics/          modelo cinemático puro, sin dependencias de React/three (desde PR 2)
-  store/            estado global (zustand) de los parámetros de simulación
-  i18n/             traducciones EN/ES (ver abajo)
+  components/       UI components (Sidebar, GalaxyCanvas, ...)
+  physics/          pure kinematic model, no React/three dependencies (since PR 2)
+  store/            global state (zustand) for the simulation parameters
+  i18n/             EN/ES translations (see below)
 ```
 
-El módulo `physics/` debe mantenerse como funciones puras testeables sin DOM ni three.js,
-para poder testear la matemática (curvas de rotación, generación de espirales, perfiles de
-densidad) de forma aislada del render.
+The `physics/` module must stay as pure, testable functions with no DOM or three.js
+dependency, so the math (rotation curves, spiral generation, density profiles) can be
+tested in isolation from the render.
 
-## Idioma
+## Language
 
-El sitio detecta el idioma del navegador (`navigator.languages`) una sola vez al cargar —
-español si el idioma preferido empieza con "es", inglés en cualquier otro caso (fallback).
-No hay selector manual. `src/i18n/detectLocale.ts` tiene la lógica pura (testeada),
-`src/i18n/translations.ts` el diccionario, y `src/i18n/index.ts` expone `t` (las strings
-activas) y `locale`. Los componentes importan `t` y usan `t.claveDeTexto` en vez de texto
-hardcodeado. Los meta tags estáticos de `index.html` (SEO/Open Graph, que un crawler sin JS
-solo puede ver en un idioma) quedan en inglés, consistente con el fallback de la app.
+The site detects the browser language (`navigator.languages`) once on load — Spanish if
+the preferred language starts with "es", English otherwise (fallback). There is no manual
+switcher. `src/i18n/detectLocale.ts` holds the pure (tested) logic, `src/i18n/translations.ts`
+the dictionary, and `src/i18n/index.ts` exposes `t` (the active strings) and `locale`.
+Components import `t` and use `t.textKey` instead of hardcoded text. The static meta tags
+in `index.html` (SEO/Open Graph, which a crawler without JS can only see in one language)
+stay in English, consistent with the app's fallback.
 
 ## Deploy
 
-Blueprint de Render.com como Static Site: ver `render.yaml` en la raíz. Build command
+Render.com blueprint as a Static Site: see `render.yaml` at the repo root. Build command
 `npm ci && npm run build`, publish path `./dist`.
 
-## Flujo de trabajo
+## Workflow
 
-Se trabaja por PR, una rama por feature (`pr-N-descripcion`). Cada PR debe incluir una
-captura de pantalla del estado visual resultante en el body del PR.
+Work happens by PR, one branch per feature (`pr-N-description`). Every PR must include a
+screenshot of the resulting visual state in the PR body.
