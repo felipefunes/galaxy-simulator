@@ -1,10 +1,10 @@
 # Galaxy Simulator
 
-Simulador interactivo de estructura y cinemática galáctica: un canvas 3D con una galaxia
-procedural (espiral, espiral barrada o elíptica) y un sidebar de parámetros de
-visualización — forma, % de polvo, % de estrellas y % de materia oscura.
+Interactive simulator of galactic structure and kinematics: a 3D canvas with a procedural
+galaxy (spiral, barred spiral, or elliptical) and a sidebar of visualization parameters —
+shape, % dust, % stars, and % dark matter.
 
-## Desarrollo
+## Development
 
 ```bash
 npm install
@@ -13,18 +13,18 @@ npm run dev
 
 ## Scripts
 
-- `npm run dev` — servidor de desarrollo
-- `npm run build` — build de producción a `dist/`
-- `npm run test` — suite de vitest
+- `npm run dev` — development server
+- `npm run build` — production build to `dist/`
+- `npm run test` — vitest suite
 - `npm run lint` — eslint
 
 ## Deploy
 
-Este repo se despliega en [Render](https://render.com) como Static Site vía blueprint
+This repo is deployed on [Render](https://render.com) as a Static Site via blueprint
 (`render.yaml`).
 
-Ver [`CLAUDE.md`](./CLAUDE.md) para el detalle de arquitectura y el modelo físico usado.
+See [`CLAUDE.md`](./CLAUDE.md) for architecture details and the physical model used.
 
-## Licencia
+## License
 
-Open source bajo licencia [MIT](./LICENSE).
+Open source under the [MIT](./LICENSE) license.
